@@ -1,24 +1,17 @@
-rule Custom_Protector_Unpacked {
+rule KaBan_Crackme_Target
+{
     meta:
-        description = "Detection rule for KaBan Custom Protector Crackme sample"
-        author = "DeepDominance"
-        date = "2026-10-04"
-        sample_md5 = "63809c874f7ca1de998cecf519a5fe95"
+        description = "KaBan crackme: target message and the code that prints it"
+        author      = "DeepDominance"
+        date        = "2026-11-06"
+        sample_sha256 = "269f66eb409a8076e60f9cf7402b6d5dba94a33331d19bd2cd49da220a769e53"
+        note        = "matches the original file and the Scylla dump alike: the sample is not packed"
 
     strings:
-        // Unique Target String
-        $s1 = "Reverse this shit, find where this message is printed." ascii
-        
-        // Import Artifacts
-        $s2 = "KERNEL32.dll" ascii
-        
-        // Opcode Pattern: lea rdx, string followed by print function call
-        $hex_pattern = { 48 8D 15 ?? ?? ?? ?? E8 ?? ?? ?? ?? 90 }
+        $msg  = "Reverse this shit, find where this message is printed." ascii
+        // lea rdx, [rip+0x35c6c] ; call 0x140001530 ; nop  (the print call in main)
+        $code = { 48 8D 15 6C 5C 03 00 E8 C0 00 00 00 90 }
 
     condition:
-        // Check for PE Header (MZ Magic Bytes)
-        uint16(0) == 0x5A4D and 
-        (
-            $s1 or ($s2 and$hex_pattern)
-        )
+        uint16(0) == 0x5A4D and $msg and $code
 }
